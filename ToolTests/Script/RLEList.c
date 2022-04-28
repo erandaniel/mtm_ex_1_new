@@ -66,7 +66,7 @@ static int getNumberOfNodes(RLEList list)
 
 static int isIndexInBounds(RLEList list, int index)
 {
-    if (list->value == '\0' || index < 0 || index >= RLEListSize(list))
+    if (list->times == -1 || index < 0 || index >= RLEListSize(list))
     {
         return 0;
     }
@@ -104,7 +104,7 @@ RLEList RLEListCreate()
         return NULL;
     }
 
-    newRleList->times = 0;
+    newRleList->times = -1;
     newRleList->value = '\0';
     newRleList->next = NULL;
 
@@ -129,18 +129,18 @@ RLEListResult RLEListAppend(RLEList list, char value)
     }
 
     // if is the first node to append.
-    if (list->value == '\0')
+    if (list->times == -1)
     {
         list->times = 1;
         list->value = value;
+        list->next = NULL;
         return RLE_LIST_SUCCESS;
     }
 
     RLEList lastNode = list;
-    while (list)
+    while (lastNode->next)
     {
-        lastNode = list;
-        list = list->next;
+        lastNode = lastNode->next;
     }
 
     if (lastNode->value == value)
@@ -154,10 +154,10 @@ RLEListResult RLEListAppend(RLEList list, char value)
         {
             return RLE_LIST_OUT_OF_MEMORY;
         }
+        lastNode->next = newNode;
         newNode->value = value;
         newNode->times = 1;
         newNode->next = NULL;
-        lastNode->next = newNode;
     }
     return RLE_LIST_SUCCESS;
 }
@@ -171,7 +171,7 @@ int RLEListSize(RLEList list)
 
     int numberOfNodes = 0;
 
-    if (list->value == '\0')
+    if (list->times == -1)
     {
         return numberOfNodes;
     }
@@ -210,14 +210,14 @@ RLEListResult RLEListRemove(RLEList list, int index)
         {
             if (list->next == NULL)
             {
-                list->times = 0;
+                list->times = -1;
                 list->value = '\0';
                 list->next = NULL;
             }
             if (list->next != NULL)
             {
                 RLEList tempNode = list->next;
-                *list = *list->next;
+                *list = *(list->next);
                 free(tempNode);
             }
         }
@@ -240,6 +240,7 @@ RLEListResult RLEListRemove(RLEList list, int index)
             nodeBeforeDeletedNode->times += nodeAfterDeletedNode->times;
             nodeBeforeDeletedNode->next = nodeAfterDeletedNode->next;
             free(nodeAfterDeletedNode);
+            free(nodeToDelete);
             return RLE_LIST_SUCCESS;
         }
         else
@@ -303,15 +304,15 @@ char *RLEListExportToString(RLEList list, RLEListResult *result)
         int currentNumber = currentNode->times;
         for (int j = 0; j < getSizeOfIntToString(currentNode->times); j++)
         {
-                int digitsInCurrentNumber = getSizeOfIntToString(currentNumber);
-                int currentDigit = currentNumber / getPowerOfTen(digitsInCurrentNumber - 1);
-                stringToExport[currentStringIdnex++] = currentDigit + '0';
-                currentNumber -= currentDigit * getPowerOfTen(digitsInCurrentNumber - 1);
-                for (int m = 1; m < digitsInCurrentNumber - getSizeOfIntToString(currentNumber); m++)
-                {
-                    stringToExport[currentStringIdnex++] = '0';
-                      j++;
-                }
+            int digitsInCurrentNumber = getSizeOfIntToString(currentNumber);
+            int currentDigit = currentNumber / getPowerOfTen(digitsInCurrentNumber - 1);
+            stringToExport[currentStringIdnex++] = currentDigit + '0';
+            currentNumber -= currentDigit * getPowerOfTen(digitsInCurrentNumber - 1);
+            for (int m = 1; m < digitsInCurrentNumber - getSizeOfIntToString(currentNumber); m++)
+            {
+                stringToExport[currentStringIdnex++] = '0';
+                j++;
+            }
         }
         stringToExport[currentStringIdnex++] = '\n';
         currentNode = currentNode->next;

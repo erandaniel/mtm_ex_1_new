@@ -240,7 +240,7 @@ RLEListResult RLEListRemove(RLEList list, int index)
             nodeBeforeDeletedNode->times += nodeAfterDeletedNode->times;
             nodeBeforeDeletedNode->next = nodeAfterDeletedNode->next;
             free(nodeAfterDeletedNode);
-            free(nodeToDelete);
+            free(nodeToDelete); 
             return RLE_LIST_SUCCESS;
         }
         else
